@@ -4,9 +4,21 @@ import boardifier.model.Model;
 import tablut.view.View;
 import tablut.control.Controller;
 
+/**
+ * This class is the starting point of the Tablut game application.
+ * It configures the game settings and starts the program.
+ */
 public class Main {
-    public static void main(String[] args) throws Exception {
-        System.out.println("Tablut Launch - Text version");
+
+    /**
+     * The main method that starts the application.
+     * It asks the user to choose a game mode and a player color, creates the game components, and starts the game loop.
+     *
+     * @param arguments The command line arguments passed to the program.
+     * @throws Exception If an error happens during the setup of the game.
+     */
+    public static void main(String[] arguments) throws Exception {
+        System.out.println("=== LANCEMENT DU TABLUT (VERSION TEXTE) ===");
 
         Scanner inputScanner = new Scanner(System.in);
         Model model = new Model();
@@ -18,7 +30,7 @@ public class Main {
             System.out.println("2 - Player vs Artificial Intelligence 1");
             System.out.println("3 - Player vs Artificial Intelligence 2");
             System.out.print("Your choice (1-3): ");
-            
+
             if (inputScanner.hasNextInt()) {
                 gameModeSelection = inputScanner.nextInt();
             } else {
@@ -32,7 +44,7 @@ public class Main {
             System.out.println("1 - Black (Attackers, play first)");
             System.out.println("2 - White (Defenders)");
             System.out.print("Your choice (1-2): ");
-            
+
             if (inputScanner.hasNextInt()) {
                 playerColorSelection = inputScanner.nextInt();
             } else {
