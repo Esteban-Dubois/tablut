@@ -3,34 +3,20 @@ package tablut.control;
 import tablut.model.ModelBoard;
 
 /**
- * Contains the movement rules for the Tablut game.
- * <p>
- * All methods are static so they can be called from anywhere without
- * creating an instance of this class.
- * </p>
+ * Rules contains the universal movement rules for the game.
  */
 public class Rules {
 
     /**
-     * Checks whether a move from a source cell to a destination cell is legal.
-     * <p>
-     * A move is illegal if any of the following is true:
-     * </p>
-     * <ul>
-     *   <li>The move is diagonal (row and column both change).</li>
-     *   <li>The source and destination are the same cell.</li>
-     *   <li>Another piece is blocking the path.</li>
-     *   <li>A non-King pawn tries to pass through or land on the throne.</li>
-     *   <li>A non-King pawn tries to pass through or land on a corner.</li>
-     * </ul>
+     * Checks if a movement from a source to a destination is allowed.
      *
-     * @param board            the current game board
-     * @param sourceRow        the row of the piece to move
-     * @param sourceColumn     the column of the piece to move
-     * @param destinationRow   the target row
-     * @param destinationColumn the target column
-     * @param isKing           {@code true} if the moving piece is the King
-     * @return {@code true} if the move is legal, {@code false} otherwise
+     * @param board The current game board.
+     * @param sourceRow The starting row of the piece.
+     * @param sourceColumn The starting column of the piece.
+     * @param destinationRow The target row.
+     * @param destinationColumn The target column.
+     * @param isKing True if the moving piece is the king, false otherwise.
+     * @return True if the move is valid, false otherwise.
      */
     public static boolean checkMoveValidity(ModelBoard board, int sourceRow, int sourceColumn, int destinationRow, int destinationColumn, boolean isKing) {
         if (sourceRow != destinationRow && sourceColumn != destinationColumn) {
@@ -93,7 +79,7 @@ public class Rules {
                 }
             }
         }
-
+        
         return true;
     }
 }
