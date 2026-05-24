@@ -5,26 +5,17 @@ import tablut.model.ModelBoard;
 import tablut.model.ModelPawn;
 
 /**
- * Handles all input from a human player during a Tablut game.
- * <p>
- * This class reads moves from the keyboard, validates the format,
- * checks that the selected pawn belongs to the current player,
- * and verifies that the move is legal according to the game rules.
- * </p>
+ * HumanPlayer handles keyboard inputs for a human player.
  */
 public class HumanPlayer {
 
     /**
-     * Asks the human player to enter a move and returns it once it is valid.
-     * <p>
-     * The player must type a source cell (e.g. {@code A1}) and a destination cell
-     * (e.g. {@code D1}). The method keeps asking until a fully legal move is entered.
-     * </p>
+     * Asks the human player for a valid move via the console.
      *
-     * @param scanner  the {@link Scanner} used to read keyboard input
-     * @param board    the current game board
-     * @param playerId the identifier of the current player (0 for black, 1 for white)
-     * @return an array of four integers: {@code [sourceRow, sourceColumn, destinationRow, destinationColumn]}
+     * @param scanner The scanner used to read user input.
+     * @param board The current game board.
+     * @param playerId The ID of the current player.
+     * @return An array containing the move coordinates.
      */
     public int[] getHumanMove(Scanner scanner, ModelBoard board, int playerId) {
         int[] resultat = new int[4];
@@ -75,11 +66,10 @@ public class HumanPlayer {
                 System.out.println("Invalid move: There is no pawn here.");
             } else {
                 ModelPawn pawn = (ModelPawn) board.getElement(sourceRow, sourceColumn);
-
+                
                 if (pawn.getColor() != myColor) {
                     System.out.println("Invalid move: This is not your pawn.");
                 } else {
-
                     if (Rules.checkMoveValidity(board, sourceRow, sourceColumn, destinationRow, destinationColumn, pawn.getKing()) == true) {
                         resultat[0] = sourceRow;
                         resultat[1] = sourceColumn;
@@ -89,13 +79,10 @@ public class HumanPlayer {
                     } else {
                         System.out.println("Invalid move.");
                     }
-
                 }
             }
-
         }
 
         return resultat;
     }
-
 }
