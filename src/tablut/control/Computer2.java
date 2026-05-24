@@ -4,45 +4,36 @@ import tablut.model.ModelBoard;
 import tablut.model.ModelPawn;
 
 /**
- * AI player that uses the Minimax algorithm to choose its move.
- * <p>
- * The board state is encoded as a 9×9 integer grid:
- * 0 = empty, 1 = black pawn, 2 = white pawn, 3 = King.
- * The AI looks one move ahead with Minimax and picks the move
- * with the best score according to {@link #evaluateBoard(int[][])}.
- * </p>
+ * Computer2 calculates moves for the AI using the Minimax algorithm.
  */
 public class Computer2 {
 
     /**
-     * Finds and returns the best move for the given color.
-     * <p>
-     * The method converts the real board into a virtual integer grid,
-     * then tries every legal move for its own pieces. For each candidate
-     * move it calls {@link #runMinimax(int[][], int, boolean)} to evaluate
-     * the resulting position one ply deep and keeps the move with the
-     * highest score (white) or lowest score (black).
-     * </p>
+     * Calculates the best move for the AI.
      *
-     * @param board   the current game board
-     * @param myColor the color of this AI ({@code ModelPawn.PAWN_BLACK} or {@code ModelPawn.PAWN_WHITE})
-     * @return an array of four integers: {@code [sourceRow, sourceColumn, destinationRow, destinationColumn]}
+     * @param board The current game board.
+     * @param myColor The color of the AI pieces.
+     * @param lastSourceRow The row of the last piece moved by the computer.
+     * @param lastSourceColumn The column of the last piece moved by the computer.
+     * @param lastDestinationRow The destination row of the last move.
+     * @param lastDestinationColumn The destination column of the last move.
+     * @return An array containing the best move coordinates.
      */
-    public int[] getBestMove(ModelBoard board, int myColor) {
+    public int[] getBestMove(ModelBoard board, int myColor, int lastSourceRow, int lastSourceColumn, int lastDestinationRow, int lastDestinationColumn) {
         int[][] virtualBoard = new int[9][9];
-        for (int row = 0; row < 9; row++) {
-            for (int column = 0; column < 9; column++) {
-                if (board.isElementAt(row, column) == true) {
-                    ModelPawn pawn = (ModelPawn) board.getElement(row, column);
+        for (int ligne = 0; ligne < 9; ligne++) {
+            for (int colonne = 0; colonne < 9; colonne++) {
+                if (board.isElementAt(ligne, colonne) == true) {
+                    ModelPawn pawn = (ModelPawn) board.getElement(ligne, colonne);
                     if (pawn.getKing() == true) {
-                        virtualBoard[row][column] = 3;
+                        virtualBoard[ligne][colonne] = 3;
                     } else if (pawn.getColor() == ModelPawn.PAWN_BLACK) {
-                        virtualBoard[row][column] = 1;
+                        virtualBoard[ligne][colonne] = 1;
                     } else {
-                        virtualBoard[row][column] = 2;
+                        virtualBoard[ligne][colonne] = 2;
                     }
                 } else {
-                    virtualBoard[row][column] = 0;
+                    virtualBoard[ligne][colonne] = 0;
                 }
             }
         }
@@ -70,6 +61,16 @@ public class Computer2 {
                                     executeVirtualMove(nextBoard, sourceRow, sourceColumn, destinationRow, destinationColumn);
 
                                     int moveValue = runMinimax(nextBoard, 1, false);
+                                    
+                                    boolean memeLigneDepart = (sourceRow == lastDestinationRow);
+                                    boolean memeColonneDepart = (sourceColumn == lastDestinationColumn);
+                                    boolean memeLigneArrivee = (destinationRow == lastSourceRow);
+                                    boolean memeColonneArrivee = (destinationColumn == lastSourceColumn);
+
+                                    if (memeLigneDepart == true && memeColonneDepart == true && memeLigneArrivee == true && memeColonneArrivee == true) {
+                                        moveValue = moveValue - 50000;
+                                    }
+
                                     if (moveValue > bestValue) {
                                         bestValue = moveValue;
                                         bestSourceRow = sourceRow;
@@ -96,6 +97,16 @@ public class Computer2 {
                                     executeVirtualMove(nextBoard, sourceRow, sourceColumn, destinationRow, destinationColumn);
 
                                     int moveValue = runMinimax(nextBoard, 1, true);
+                                    
+                                    boolean memeLigneDepart = (sourceRow == lastDestinationRow);
+                                    boolean memeColonneDepart = (sourceColumn == lastDestinationColumn);
+                                    boolean memeLigneArrivee = (destinationRow == lastSourceRow);
+                                    boolean memeColonneArrivee = (destinationColumn == lastSourceColumn);
+
+                                    if (memeLigneDepart == true && memeColonneDepart == true && memeLigneArrivee == true && memeColonneArrivee == true) {
+                                        moveValue = moveValue + 50000;
+                                    }
+
                                     if (moveValue < bestValue) {
                                         bestValue = moveValue;
                                         bestSourceRow = sourceRow;
@@ -120,19 +131,12 @@ public class Computer2 {
     }
 
     /**
-     * Recursively evaluates the board using the Minimax algorithm.
-     * <p>
-     * When {@code isMaximizingPlayer} is {@code true} the method simulates
-     * the white player and looks for the highest score. When it is {@code false}
-     * it simulates the black player and looks for the lowest score.
-     * The recursion stops when {@code depth} reaches 0 or a winning/losing
-     * position is detected (score above 90 000 or below −90 000).
-     * </p>
+     * Explores future game states to evaluate a move.
      *
-     * @param board              the virtual board to evaluate
-     * @param depth              the number of half-moves still to simulate
-     * @param isMaximizingPlayer {@code true} if it is white's turn to simulate
-     * @return the best score found for the current player
+     * @param board The current state of the virtual board.
+     * @param depth The remaining depth to explore.
+     * @param isMaximizingPlayer True if it is the turn of the maximizing player.
+     * @return The evaluation score of the board.
      */
     private int runMinimax(int[][] board, int depth, boolean isMaximizingPlayer) {
         int boardScore = evaluateBoard(board);
@@ -151,7 +155,7 @@ public class Computer2 {
                                 if (checkVirtualMove(board, sourceRow, sourceColumn, destinationRow, destinationColumn, 2) == true) {
                                     int[][] nextBoard = copyBoard(board);
                                     executeVirtualMove(nextBoard, sourceRow, sourceColumn, destinationRow, destinationColumn);
-
+                                    
                                     int evaluation = runMinimax(nextBoard, depth - 1, false);
                                     if (evaluation > maxEvaluation) {
                                         maxEvaluation = evaluation;
@@ -174,7 +178,7 @@ public class Computer2 {
                                 if (checkVirtualMove(board, sourceRow, sourceColumn, destinationRow, destinationColumn, 1) == true) {
                                     int[][] nextBoard = copyBoard(board);
                                     executeVirtualMove(nextBoard, sourceRow, sourceColumn, destinationRow, destinationColumn);
-
+                                    
                                     int evaluation = runMinimax(nextBoard, depth - 1, true);
                                     if (evaluation < minEvaluation) {
                                         minEvaluation = evaluation;
@@ -190,20 +194,15 @@ public class Computer2 {
     }
 
     /**
-     * Checks whether a move is legal on the virtual integer board.
-     * <p>
-     * The rules applied are the same as in {@link Rules#checkMoveValidity}:
-     * no diagonal moves, no jumping over pieces, non-King pawns cannot pass
-     * through the throne (4,4) or the four corner cells.
-     * </p>
+     * Checks if a move is valid on the virtual board.
      *
-     * @param board             the virtual board
-     * @param sourceRow         the row of the piece to move
-     * @param sourceColumn      the column of the piece to move
-     * @param destinationRow    the target row
-     * @param destinationColumn the target column
-     * @param playerColor       the color of the player (1 = black, 2 = white)
-     * @return {@code true} if the move is legal, {@code false} otherwise
+     * @param board The virtual board state.
+     * @param sourceRow The starting row.
+     * @param sourceColumn The starting column.
+     * @param destinationRow The destination row.
+     * @param destinationColumn The destination column.
+     * @param playerColor The color of the player.
+     * @return True if the move is valid, false otherwise.
      */
     private boolean checkVirtualMove(int[][] board, int sourceRow, int sourceColumn, int destinationRow, int destinationColumn, int playerColor) {
         if (board[sourceRow][sourceColumn] == 0) {
@@ -235,52 +234,52 @@ public class Computer2 {
 
         if (sourceColumn == destinationColumn) {
             if (sourceRow > destinationRow) {
-                for (int i = sourceRow - 1; i >= destinationRow; i--) {
-                    if (board[i][destinationColumn] != 0) {
+                for (int index = sourceRow - 1; index >= destinationRow; index--) {
+                    if (board[index][destinationColumn] != 0) {
                         return false;
                     }
-                    if (i == 4 && destinationColumn == 4 && isKing == false) {
+                    if (index == 4 && destinationColumn == 4 && isKing == false) {
                         return false;
                     }
-                    if (((i == 0 && destinationColumn == 0) || (i == 0 && destinationColumn == 8) || (i == 8 && destinationColumn == 0) || (i == 8 && destinationColumn == 8)) && isKing == false) {
+                    if (((index == 0 && destinationColumn == 0) || (index == 0 && destinationColumn == 8) || (index == 8 && destinationColumn == 0) || (index == 8 && destinationColumn == 8)) && isKing == false) {
                         return false;
                     }
                 }
             } else if (sourceRow < destinationRow) {
-                for (int i = sourceRow + 1; i <= destinationRow; i++) {
-                    if (board[i][destinationColumn] != 0) {
+                for (int index = sourceRow + 1; index <= destinationRow; index++) {
+                    if (board[index][destinationColumn] != 0) {
                         return false;
                     }
-                    if (i == 4 && destinationColumn == 4 && isKing == false) {
+                    if (index == 4 && destinationColumn == 4 && isKing == false) {
                         return false;
                     }
-                    if (((i == 0 && destinationColumn == 0) || (i == 0 && destinationColumn == 8) || (i == 8 && destinationColumn == 0) || (i == 8 && destinationColumn == 8)) && isKing == false) {
+                    if (((index == 0 && destinationColumn == 0) || (index == 0 && destinationColumn == 8) || (index == 8 && destinationColumn == 0) || (index == 8 && destinationColumn == 8)) && isKing == false) {
                         return false;
                     }
                 }
             }
         } else {
             if (sourceColumn > destinationColumn) {
-                for (int i = sourceColumn - 1; i >= destinationColumn; i--) {
-                    if (board[destinationRow][i] != 0) {
+                for (int index = sourceColumn - 1; index >= destinationColumn; index--) {
+                    if (board[destinationRow][index] != 0) {
                         return false;
                     }
-                    if (destinationRow == 4 && i == 4 && isKing == false) {
+                    if (destinationRow == 4 && index == 4 && isKing == false) {
                         return false;
                     }
-                    if (((destinationRow == 0 && i == 0) || (destinationRow == 0 && i == 8) || (destinationRow == 8 && i == 0) || (destinationRow == 8 && i == 8)) && isKing == false) {
+                    if (((destinationRow == 0 && index == 0) || (destinationRow == 0 && index == 8) || (destinationRow == 8 && index == 0) || (destinationRow == 8 && index == 8)) && isKing == false) {
                         return false;
                     }
                 }
             } else if (sourceColumn < destinationColumn) {
-                for (int i = sourceColumn + 1; i <= destinationColumn; i++) {
-                    if (board[destinationRow][i] != 0) {
+                for (int index = sourceColumn + 1; index <= destinationColumn; index++) {
+                    if (board[destinationRow][index] != 0) {
                         return false;
                     }
-                    if (destinationRow == 4 && i == 4 && isKing == false) {
+                    if (destinationRow == 4 && index == 4 && isKing == false) {
                         return false;
                     }
-                    if (((destinationRow == 0 && i == 0) || (destinationRow == 0 && i == 8) || (destinationRow == 8 && i == 0) || (destinationRow == 8 && i == 8)) && isKing == false) {
+                    if (((destinationRow == 0 && index == 0) || (destinationRow == 0 && index == 8) || (destinationRow == 8 && index == 0) || (destinationRow == 8 && index == 8)) && isKing == false) {
                         return false;
                     }
                 }
@@ -291,20 +290,13 @@ public class Computer2 {
     }
 
     /**
-     * Applies a move on the virtual board, including custodian captures and
-     * King capture detection.
-     * <p>
-     * After placing the piece on the destination cell, the method checks all
-     * four adjacent cells for sandwiched enemy pawns and removes them.
-     * The King is never removed by the sandwich rule; use
-     * {@link #checkVirtualKingCapture(int[][])} for that.
-     * </p>
+     * Moves a piece and captures enemies on the virtual board.
      *
-     * @param board             the virtual board to modify
-     * @param sourceRow         the row of the piece to move
-     * @param sourceColumn      the column of the piece to move
-     * @param destinationRow    the target row
-     * @param destinationColumn the target column
+     * @param board The virtual board to update.
+     * @param sourceRow The starting row.
+     * @param sourceColumn The starting column.
+     * @param destinationRow The destination row.
+     * @param destinationColumn The destination column.
      */
     private void executeVirtualMove(int[][] board, int sourceRow, int sourceColumn, int destinationRow, int destinationColumn) {
         int pawnType = board[sourceRow][sourceColumn];
@@ -361,11 +353,11 @@ public class Computer2 {
     }
 
     /**
-     * Returns {@code true} if the given piece type belongs to the enemy.
+     * Identifies if a piece is an enemy.
      *
-     * @param pawnType the integer code of the piece (1 = black, 2 = white, 3 = King)
-     * @param myColor  the color of the current player (1 = black, 2 = white)
-     * @return {@code true} if the piece is an enemy, {@code false} otherwise
+     * @param pawnType The type of the piece.
+     * @param myColor The color of the current player.
+     * @return True if the piece is an enemy, false otherwise.
      */
     private boolean isVirtualEnemy(int pawnType, int myColor) {
         if (myColor == 1) {
@@ -381,18 +373,13 @@ public class Computer2 {
     }
 
     /**
-     * Returns {@code true} if the cell behind a potential capture target
-     * counts as the second side of the sandwich.
-     * <p>
-     * A cell counts if it holds a friendly piece, or if it is one of the
-     * four corner cells, or if it is the empty throne at (4, 4).
-     * </p>
+     * Checks if a cell contains an ally or a trap to help capture an enemy.
      *
-     * @param board   the virtual board
-     * @param row     the row of the cell to check
-     * @param column  the column of the cell to check
-     * @param myColor the color of the attacking player (1 = black, 2 = white)
-     * @return {@code true} if the cell completes a valid sandwich, {@code false} otherwise
+     * @param board The virtual board.
+     * @param row The row to check.
+     * @param column The column to check.
+     * @param myColor The color of the current player.
+     * @return True if an ally or trap is present, false otherwise.
      */
     private boolean isVirtualAllyOrTrap(int[][] board, int row, int column, int myColor) {
         int cell = board[row][column];
@@ -415,14 +402,9 @@ public class Computer2 {
     }
 
     /**
-     * Checks whether the King is fully surrounded and removes him from the
-     * virtual board if so.
-     * <p>
-     * The King is considered blocked on a side if that side has a board edge,
-     * a black pawn, or the throne cell (4, 4).
-     * </p>
+     * Verifies if the king is surrounded and eliminated on the virtual board.
      *
-     * @param board the virtual board to check and potentially modify
+     * @param board The virtual board.
      */
     private void checkVirtualKingCapture(int[][] board) {
         int kingRow = -1;
@@ -435,7 +417,6 @@ public class Computer2 {
                 }
             }
         }
-
         if (kingRow == -1) {
             return;
         }
@@ -464,29 +445,16 @@ public class Computer2 {
     }
 
     /**
-     * Scores the current state of the virtual board from white's perspective.
-     * <p>
-     * Scoring rules:
-     * </p>
-     * <ul>
-     *   <li>King captured → −100 000 (black wins).</li>
-     *   <li>King on a corner → +100 000 (white wins).</li>
-     *   <li>Each black pawn on the board → −1 000 points, plus a bonus equal to
-     *       its Manhattan distance from the King (encourages black to close in).</li>
-     *   <li>Each white pawn on the board → +1 000 points, minus 2 if it shares
-     *       a row or column with the King (penalises blocking the King's escape).</li>
-     *   <li>King's Manhattan distance to the nearest corner → −10 points per cell
-     *       (encourages the King to move toward an exit).</li>
-     * </ul>
+     * Calculates a score for the board to decide the best move.
      *
-     * @param board the virtual board to evaluate
-     * @return the score of the position (positive = good for white, negative = good for black)
+     * @param board The virtual board to evaluate.
+     * @return The final score of the board.
      */
     private int evaluateBoard(int[][] board) {
         boolean kingAlive = false;
         int kingRow = -1;
         int kingColumn = -1;
-
+        
         for (int ligne = 0; ligne < 9; ligne++) {
             for (int colonne = 0; colonne < 9; colonne++) {
                 if (board[ligne][colonne] == 3) {
@@ -500,39 +468,39 @@ public class Computer2 {
         if (kingAlive == false) {
             return -100000;
         }
-
+        
         boolean coinHautGauche = (kingRow == 0 && kingColumn == 0);
         boolean coinHautDroite = (kingRow == 0 && kingColumn == 8);
         boolean coinBasGauche = (kingRow == 8 && kingColumn == 0);
         boolean coinBasDroite = (kingRow == 8 && kingColumn == 8);
-
+        
         if (coinHautGauche == true || coinHautDroite == true || coinBasGauche == true || coinBasDroite == true) {
             return 100000;
         }
 
         int score = 0;
-
+        
         for (int ligne = 0; ligne < 9; ligne++) {
             for (int colonne = 0; colonne < 9; colonne++) {
-
+                
                 if (board[ligne][colonne] == 1) {
                     score = score - 1000;
-
+                    
                     int distanceLigne = Math.abs(ligne - kingRow);
                     int distanceColonne = Math.abs(colonne - kingColumn);
                     int distanceTotale = distanceLigne + distanceColonne;
-
+                    
                     score = score + distanceTotale;
                 }
-
+                
                 if (board[ligne][colonne] == 2) {
                     score = score + 1000;
-
+                    
                     if (ligne == kingRow || colonne == kingColumn) {
                         score = score - 2;
                     }
                 }
-
+                
             }
         }
 
@@ -540,21 +508,21 @@ public class Computer2 {
         int distanceHautDroiteSortie = kingRow + (8 - kingColumn);
         int distanceBasGaucheSortie = (8 - kingRow) + kingColumn;
         int distanceBasDroiteSortie = (8 - kingRow) + (8 - kingColumn);
-
+        
         int distanceMinimaleHaut = Math.min(distanceHautGaucheSortie, distanceHautDroiteSortie);
         int distanceMinimaleBas = Math.min(distanceBasGaucheSortie, distanceBasDroiteSortie);
         int distanceFinaleSortie = Math.min(distanceMinimaleHaut, distanceMinimaleBas);
-
+        
         score = score - (distanceFinaleSortie * 10);
-
+        
         return score;
     }
 
     /**
-     * Creates and returns a deep copy of the given 9×9 virtual board.
+     * Creates an exact duplicate of the virtual board.
      *
-     * @param board the board to copy
-     * @return a new 9×9 array with the same values
+     * @param board The board to copy.
+     * @return The new duplicated board.
      */
     private int[][] copyBoard(int[][] board) {
         int[][] newBoard = new int[9][9];
