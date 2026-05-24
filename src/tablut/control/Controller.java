@@ -13,33 +13,20 @@ import tablut.model.ModelPawn;
 import tablut.view.View;
 
 /**
- * Main controller for the Tablut game.
- * <p>
- * This class extends the Boardifier framework controller and drives the main
- * game loop. Each turn it decides whether the current player is human or an AI,
- * collects the chosen move, applies it to the board, checks for captures, and
- * then tests the win condition.
- * </p>
+ * Controller manages the main game loop and coordinates players.
  */
 public class Controller extends boardifier.control.Controller {
 
-    /** Row of the source cell of the last computer move. Used to avoid repetitive loops. */
     private int lastComputerSourceRow = -1;
-
-    /** Column of the source cell of the last computer move. */
     private int lastComputerSourceColumn = -1;
-
-    /** Row of the destination cell of the last computer move. */
     private int lastComputerDestinationRow = -1;
-
-    /** Column of the destination cell of the last computer move. */
     private int lastComputerDestinationColumn = -1;
 
     /**
-     * Creates a new Controller and sets the first stage name to {@code "tablut"}.
+     * Constructs the controller.
      *
-     * @param model the game data model
-     * @param view  the game view
+     * @param model The game model.
+     * @param view The graphical view of the game.
      */
     public Controller(Model model, View view) {
         super(model, view);
@@ -47,18 +34,7 @@ public class Controller extends boardifier.control.Controller {
     }
 
     /**
-     * Runs the main game loop until the stage ends.
-     * <p>
-     * Each iteration of the loop:
-     * </p>
-     * <ol>
-     *   <li>Updates the display.</li>
-     *   <li>Determines the current player type (human, AI 1, or AI 2).</li>
-     *   <li>Collects the chosen move from the appropriate source.</li>
-     *   <li>Executes the move on the board.</li>
-     *   <li>Checks for captures and the win condition.</li>
-     *   <li>Passes the turn to the next player.</li>
-     * </ol>
+     * Runs the main game loop until the game ends.
      */
     public void stageLoop() {
         Scanner scanner = new Scanner(System.in);
@@ -71,7 +47,7 @@ public class Controller extends boardifier.control.Controller {
 
             ModelBoard board = (ModelBoard) model.getGameStage().getContainer("tablutBoard");
             int playerId = model.getIdPlayer();
-
+            
             int myColor = 0;
             if (playerId == 0) {
                 myColor = ModelPawn.PAWN_BLACK;
@@ -87,27 +63,27 @@ public class Controller extends boardifier.control.Controller {
                 bestMove = human.getHumanMove(scanner, board, playerId);
             } else if (currentPlayer.getName().contains("Artificial Intelligence 2") == true) {
                 Computer2 computer2 = new Computer2();
-                bestMove = computer2.getBestMove(board, myColor);
+                bestMove = computer2.getBestMove(board, myColor, lastComputerSourceRow, lastComputerSourceColumn, lastComputerDestinationRow, lastComputerDestinationColumn);
             } else {
                 Computer1 computer1 = new Computer1();
                 bestMove = computer1.getBestMove(board, myColor, lastComputerSourceRow, lastComputerSourceColumn, lastComputerDestinationRow, lastComputerDestinationColumn);
             }
 
             if (bestMove[0] != -1) {
-
+                
                 if (currentPlayer.getType() != Player.HUMAN) {
                     lastComputerSourceRow = bestMove[0];
                     lastComputerSourceColumn = bestMove[1];
                     lastComputerDestinationRow = bestMove[2];
                     lastComputerDestinationColumn = bestMove[3];
-
+                    
                     String lettresValides = "ABCDEFGHI";
                     String chiffresValides = "123456789";
                     char sourceLetter = lettresValides.charAt(bestMove[1]);
                     char sourceNumber = chiffresValides.charAt(bestMove[0]);
                     char destinationLetter = lettresValides.charAt(bestMove[3]);
                     char destinationNumber = chiffresValides.charAt(bestMove[2]);
-
+                    
                     System.out.println(currentPlayer.getName() + " moved: " + sourceLetter + sourceNumber + " -> " + destinationLetter + destinationNumber);
                 }
 
@@ -132,12 +108,12 @@ public class Controller extends boardifier.control.Controller {
     }
 
     /**
-     * Moves a pawn from its source cell to a destination cell on the board.
+     * Executes the visual movement of a piece.
      *
-     * @param sourceRow         the row of the pawn to move
-     * @param sourceColumn      the column of the pawn to move
-     * @param destinationRow    the target row
-     * @param destinationColumn the target column
+     * @param sourceRow The starting row.
+     * @param sourceColumn The starting column.
+     * @param destinationRow The target row.
+     * @param destinationColumn The target column.
      */
     private void executeMove(int sourceRow, int sourceColumn, int destinationRow, int destinationColumn) {
         GameElement pawn = model.getGameStage().getContainer("tablutBoard").getElement(sourceRow, sourceColumn);
@@ -147,12 +123,12 @@ public class Controller extends boardifier.control.Controller {
     }
 
     /**
-     * Returns {@code true} if a friendly pawn is on the given cell.
+     * Verifies if an ally is located at the given coordinates.
      *
-     * @param destinationRow    the row to check
-     * @param destinationColumn the column to check
-     * @param myColor           the color of the current player
-     * @return {@code true} if there is an ally on that cell, {@code false} otherwise
+     * @param destinationRow The row to check.
+     * @param destinationColumn The column to check.
+     * @param myColor The color of the current player.
+     * @return True if an ally is found, false otherwise.
      */
     private boolean isAllyAt(int destinationRow, int destinationColumn, int myColor) {
         ModelBoard board = (ModelBoard) model.getGameStage().getContainer("tablutBoard");
@@ -166,12 +142,12 @@ public class Controller extends boardifier.control.Controller {
     }
 
     /**
-     * Returns {@code true} if an enemy pawn is on the given cell.
+     * Verifies if an enemy is located at the given coordinates.
      *
-     * @param destinationRow    the row to check
-     * @param destinationColumn the column to check
-     * @param myColor           the color of the current player
-     * @return {@code true} if there is an enemy on that cell, {@code false} otherwise
+     * @param destinationRow The row to check.
+     * @param destinationColumn The column to check.
+     * @param myColor The color of the current player.
+     * @return True if an enemy is found, false otherwise.
      */
     private boolean isEnemyAt(int destinationRow, int destinationColumn, int myColor) {
         ModelBoard board = (ModelBoard) model.getGameStage().getContainer("tablutBoard");
@@ -185,16 +161,10 @@ public class Controller extends boardifier.control.Controller {
     }
 
     /**
-     * Checks all four directions around the pawn that just moved and removes any
-     * enemy pawn that is now sandwiched (custodian capture).
-     * <p>
-     * A corner cell or an empty throne can act as the second side of the sandwich.
-     * The King can never be removed by this method; King capture is handled
-     * separately by {@link #checkKingCapture()}.
-     * </p>
+     * Checks around the destination for any valid captures and removes the dead pieces.
      *
-     * @param destinationRow    the row where the pawn just landed
-     * @param destinationColumn the column where the pawn just landed
+     * @param destinationRow The row of the last move.
+     * @param destinationColumn The column of the last move.
      */
     private void checkCaptures(int destinationRow, int destinationColumn) {
         ModelBoard board = (ModelBoard) model.getGameStage().getContainer("tablutBoard");
@@ -280,11 +250,7 @@ public class Controller extends boardifier.control.Controller {
     }
 
     /**
-     * Checks whether the King is completely surrounded and removes him if so.
-     * <p>
-     * The King is captured when all four sides (up, down, left, right) are blocked
-     * by a board edge, a black pawn, or the throne cell.
-     * </p>
+     * Checks if the king is surrounded and ends the game if true.
      */
     private void checkKingCapture() {
         ModelBoard board = (ModelBoard) model.getGameStage().getContainer("tablutBoard");
@@ -333,13 +299,9 @@ public class Controller extends boardifier.control.Controller {
     }
 
     /**
-     * Returns {@code true} if the current player has won the game.
-     * <p>
-     * White wins if the King has reached a corner cell.
-     * Black wins if the King has been removed from the board.
-     * </p>
+     * Determines if a player has won the game.
      *
-     * @return {@code true} if the game is over, {@code false} otherwise
+     * @return True if a player has won, false otherwise.
      */
     private boolean win() {
         int playerId = model.getIdPlayer();
@@ -363,7 +325,7 @@ public class Controller extends boardifier.control.Controller {
         if ((kingAlive == false) && (playerId == 0)) {
             return true;
         }
-
+        
         return false;
     }
 }
